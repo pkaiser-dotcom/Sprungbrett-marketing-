@@ -1,0 +1,2 @@
+import React from 'react'
+export function Input(props){ return <input {...props} className={`w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-slate-100 ${props.className||''}`} />}

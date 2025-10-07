@@ -1,0 +1,2 @@
+import React from 'react'
+export function Calendar({selected, onSelect}){ return <input type="date" className="bg-slate-800 border border-slate-700 rounded px-2 py-1" value={selected? new Date(selected).toISOString().slice(0,10): ''} onChange={(e)=>onSelect&&onSelect(new Date(e.target.value))} />}

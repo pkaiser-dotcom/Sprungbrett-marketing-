@@ -1,0 +1,2 @@
+import React from 'react'
+export function Slider({value=[0], onValueChange, max=100, min=0, step=1, className=''}){ return <input type='range' className={`w-full ${className}`} min={min} max={max} step={step} value={value[0]} onChange={(e)=>onValueChange([Number(e.target.value)])} />}
