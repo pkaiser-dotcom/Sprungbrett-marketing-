@@ -1,8 +1,26 @@
 // src/entities/Task.js
+const BASE = "/api/Task";
 
-import { makeEntity } from "@/integrations/Core";
+async function http(url, opts) {
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(txt || `HTTP ${res.status}`);
+  }
+  return res.status === 204 ? null : res.json();
+}
 
-export const Task = makeEntity("Task");
-// Jetzt kannst du im Code Task.list(), Task.create(), Task.update(), Task.delete() usw. verwenden.
+export const Task = {
+  list: (sort) => http(`${BASE}${sort ? `?sort=${encodeURIComponent(sort)}` : ""}`),
+  filter: (query) =>
+    http(`${BASE}/filter`, { method: "POST", body: JSON.stringify(query) }),
+  create: (data) => http(BASE, { method: "POST", body: JSON.stringify(data) }),
+  update: (id, data) =>
+    http(`${BASE}/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  delete: (id) => http(`${BASE}/${id}`, { method: "DELETE" }),
+};
 
 export default Task;
