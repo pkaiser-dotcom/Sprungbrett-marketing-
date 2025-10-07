@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, CheckSquare, Edit3 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import EditTaskForm from "../components/tasks/EditTaskForm";
-import AddTaskForm from "../components/tasks/AddTaskForm";
+import EditTaskForm from "@/components/tasks/EditTaskForm";
+import AddTaskForm from "@/components/tasks/AddTaskForm";
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
