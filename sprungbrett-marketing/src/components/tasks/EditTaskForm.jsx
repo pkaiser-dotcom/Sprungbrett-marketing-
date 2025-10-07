@@ -10,19 +10,19 @@ import { Calendar } from "@/components/ui/calendar";
 import { Task } from "@/entities/Task";
 import { format, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { CalendarIcon, Loader2, Tag, Users, Layers } from 'lucide-react';
+import { CalendarIcon, Loader2, Tag, Users, Layers, Building2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
 const priorities = ["Niedrig", "Mittel", "Hoch", "Kritisch"];
 const statuses = ["Backlog", "In Bearbeitung", "Überprüfung", "Abgeschlossen"];
 const skillOptions = ["content_creation","social_media","seo","ppc_advertising","design","copywriting","analytics","strategy"];
 const skillLabels = {
-  content_creation:"Content-Erstellung", social_media:"Social Media", seo:"SEO",
-  ppc_advertising:"PPC-Werbung", design:"Design", copywriting:"Texten",
-  analytics:"Analytics", strategy:"Strategie"
+  content_creation: "Content-Erstellung", social_media: "Social Media", seo: "SEO",
+  ppc_advertising: "PPC-Werbung", design: "Design", copywriting: "Texten",
+  analytics: "Analytics", strategy: "Strategie"
 };
 
-export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, teamMembers }) {
+export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, teamMembers, customers = [] }) {
   const [formData, setFormData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTag, setCurrentTag] = useState("");
@@ -35,6 +35,7 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
         priority: task.priority || "Mittel",
         status: task.status || "Backlog",
         assigned_to: task.assigned_to || "",
+        customer_id: task.customer_id || "",
         due_date: task.due_date ? parseISO(task.due_date) : null,
         estimated_hours: task.estimated_hours || 1,
         required_skills: task.required_skills || [],
@@ -52,6 +53,8 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
       const dataToUpdate = {
         ...formData,
         due_date: formData.due_date ? format(formData.due_date, 'yyyy-MM-dd') : null,
+        assigned_to: formData.assigned_to || null,
+        customer_id: formData.customer_id || null,
       };
       await Task.update(task.id, dataToUpdate);
       onTaskUpdated?.();
@@ -64,21 +67,19 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
   };
 
   const handleInputChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
-
   const handleMultiSelectChange = (field, value) => {
     setFormData(prev => {
-      const cur = prev[field] || [];
-      return { ...prev, [field]: cur.includes(value) ? cur.filter(i => i !== value) : [...cur, value] };
+      const current = prev[field] || [];
+      return { ...prev, [field]: current.includes(value) ? current.filter(i => i !== value) : [...current, value] };
     });
   };
-
   const handleAddTag = () => {
     if (currentTag && !formData.tags.includes(currentTag)) {
       setFormData(prev => ({ ...prev, tags: [...prev.tags, currentTag] }));
       setCurrentTag("");
     }
   };
-  const handleRemoveTag = (t) => setFormData(prev => ({ ...prev, tags: prev.tags.filter(x => x !== t) }));
+  const handleRemoveTag = (tagToRemove) => setFormData(prev => ({ ...prev, tags: prev.tags.filter(tag => tag !== tagToRemove) }));
 
   if (!formData) return null;
 
@@ -106,7 +107,7 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
               <Select value={formData.priority} onValueChange={(v)=>handleInputChange('priority', v)}>
                 <SelectTrigger className="bg-slate-700 border-slate-600 text-white w-full"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-slate-700 border-slate-600 text-white">
-                  {priorities.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  {priorities.map(p => <SelectItem key={p} value={p} className="hover:bg-slate-600">{p}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -115,7 +116,7 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
               <Select value={formData.status} onValueChange={(v)=>handleInputChange('status', v)}>
                 <SelectTrigger className="bg-slate-700 border-slate-600 text-white w-full"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-slate-700 border-slate-600 text-white">
-                  {statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {statuses.map(s => <SelectItem key={s} value={s} className="hover:bg-slate-600">{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -127,11 +128,28 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
               <Select value={formData.assigned_to} onValueChange={(v)=>handleInputChange('assigned_to', v)}>
                 <SelectTrigger className="bg-slate-700 border-slate-600 text-white w-full"><SelectValue placeholder="Teammitglied auswählen" /></SelectTrigger>
                 <SelectContent className="bg-slate-700 border-slate-600 text-white">
-                  <SelectItem value={""}>Nicht zugewiesen</SelectItem>
-                  {teamMembers?.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                  <SelectItem value={""} className="hover:bg-slate-600">Nicht zugewiesen</SelectItem>
+                  {teamMembers?.map(member => <SelectItem key={member.id} value={member.id} className="hover:bg-slate-600">{member.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label className="text-slate-300 flex items-center gap-1.5"><Building2 className="w-4 h-4 text-slate-400" />Kunde</Label>
+              <Select value={formData.customer_id} onValueChange={(v)=>handleInputChange('customer_id', v)}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white w-full"><SelectValue placeholder="Kunden wählen" /></SelectTrigger>
+                <SelectContent className="bg-slate-700 border-slate-600 text-white">
+                  <SelectItem value={""} className="hover:bg-slate-600">Kein Kunde</SelectItem>
+                  {customers?.map(c => (
+                    <SelectItem key={c.id} value={c.id} className="hover:bg-slate-600">
+                      {c.company}{c.first_name ? ` — ${c.first_name} ${c.last_name || ""}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label className="text-slate-300">Fälligkeitsdatum</Label>
               <Popover>
@@ -142,32 +160,34 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 bg-slate-700 border-slate-600 text-white" align="start">
-                  <Calendar mode="single" selected={formData.due_date} onSelect={(d)=>handleInputChange('due_date', d)} initialFocus />
+                  <Calendar mode="single" selected={formData.due_date} onSelect={(date)=>handleInputChange('due_date', date)} initialFocus />
                 </PopoverContent>
               </Popover>
             </div>
-          </div>
-
-          <div>
-            <Label className="text-slate-300">Geschätzte Stunden</Label>
-            <Input type="number" min="0.5" step="0.5" value={formData.estimated_hours} onChange={(e)=>handleInputChange('estimated_hours', parseFloat(e.target.value))} className="bg-slate-700 border-slate-600 text-white" />
+            <div>
+              <Label className="text-slate-300">Geschätzte Stunden</Label>
+              <Input type="number" min="0.5" step="0.5" value={formData.estimated_hours} onChange={(e)=>handleInputChange('estimated_hours', parseFloat(e.target.value))} className="bg-slate-700 border-slate-600 text-white" />
+            </div>
           </div>
 
           <div>
             <Label className="text-slate-300 flex items-center gap-1.5"><Layers className="w-4 h-4 text-slate-400" />Erforderliche Fähigkeiten</Label>
             <div className="mt-2 flex flex-wrap gap-2 p-3 bg-slate-700/50 border border-slate-600 rounded-md">
-              {skillOptions.map(skill => (
-                <Button
-                  key={skill}
-                  type="button"
-                  variant={formData.required_skills.includes(skill) ? "default" : "outline"}
-                  size="sm"
-                  onClick={()=>handleMultiSelectChange('required_skills', skill)}
-                  className={formData.required_skills.includes(skill) ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600" : "text-slate-300 border-slate-500 hover:bg-slate-600 hover:text-white"}
-                >
-                  {skillLabels[skill]}
-                </Button>
-              ))}
+              {skillOptions.map(skill => {
+                const active = formData.required_skills.includes(skill);
+                return (
+                  <Button
+                    key={skill}
+                    type="button"
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    onClick={()=>handleMultiSelectChange('required_skills', skill)}
+                    className={active ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600" : "text-slate-300 border-slate-500 hover:bg-slate-600 hover:text-white"}
+                  >
+                    {skillLabels[skill]}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 
@@ -179,7 +199,7 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
           <div>
             <Label className="text-slate-300 flex items-center gap-1.5"><Tag className="w-4 h-4 text-slate-400" />Tags</Label>
             <div className="flex gap-2 mt-1">
-              <Input value={currentTag} onChange={(e)=>setCurrentTag(e.target.value)} className="bg-slate-700 border-slate-600 text-white" placeholder="Tag hinzufügen" onKeyDown={(e)=>{ if(e.key==='Enter'){ e.preventDefault(); handleAddTag(); }}} />
+              <Input value={currentTag} onChange={(e)=>setCurrentTag(e.target.value)} className="bg-slate-700 border-slate-600 text-white" placeholder="Tag hinzufügen" onKeyDown={(e)=>{ if (e.key === 'Enter') { e.preventDefault(); handleAddTag();}}} />
               <Button type="button" onClick={handleAddTag} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-600">Hinzufügen</Button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -195,7 +215,7 @@ export default function EditTaskForm({ open, onOpenChange, task, onTaskUpdated, 
 
         <DialogFooter className="p-6 pt-4 bg-slate-800/50 border-t border-slate-700">
           <DialogClose asChild>
-            <Button type="button" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">Abbrechen</Button>
+            <Button type="button" variant="outline" onClick={()=>onOpenChange(false)} className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">Abbrechen</Button>
           </DialogClose>
           <Button type="submit" onClick={handleSubmit} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
             {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Wird gespeichert...</> : "Änderungen speichern"}
