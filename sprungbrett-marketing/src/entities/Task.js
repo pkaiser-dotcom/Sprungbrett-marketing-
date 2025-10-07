@@ -25,3 +25,7 @@ export const Task = {
     if(idx>=0){ data[idx] = { ...data[idx], ...payload, updated_date: new Date().toISOString() }; write(data); }
   }
 }
+"customer_id": {
+  "type": "string",
+  "description": "ID des zugehörigen Kunden"
+}
