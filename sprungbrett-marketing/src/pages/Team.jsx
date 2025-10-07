@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { TeamMember } from "@/entities/TeamMember";
 import { Button } from "@/components/ui/button";
 import { Plus, Users } from "lucide-react";
-import MemberCard from "../components/team/MemberCard";
-import AddMemberForm from "../components/team/AddMemberForm";
-import EditTeamMemberForm from "../components/team/EditTeamMemberForm";
+import MemberCard from "@/components/team/MemberCard";
+import AddMemberForm from "@/components/team/AddMemberForm";
+import EditTeamMemberForm from "@/components/team/EditTeamMemberForm";
 
 export default function Team() {
   const [teamMembers, setTeamMembers] = useState([]);
